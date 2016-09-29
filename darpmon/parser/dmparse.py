@@ -73,11 +73,13 @@ def main():
     #
     # deal with config file ~/.dmparserc.json
     #
+    config = None
     config_file_location = os.path.expanduser("~/.dmparserc.json")
-    f=open(config_file_location)
-    config_file_string = f.read()
-    f.close()
-    config = json.loads(config_file_string) 
+    if (os.path.exists(config_file_location)): 
+        f=open(config_file_location)
+        config_file_string = f.read()
+        f.close()
+        config = json.loads(config_file_string)        
     # keys are mac addresses
     # value has structure
     # { firstTime:             ,
