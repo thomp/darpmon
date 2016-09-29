@@ -6,11 +6,12 @@ setup(
     # versions:
     # http://semver.org/ ?
     # comply with PEP440 ?
-    version = "0.1.3",
+    version = "0.1.4",
     entry_points={
         'console_scripts': [
             'darpmon=darpmon.darpmon:main',
-            'dmparse=darpmon.parser.dmparse:main'
+            'dmparse=darpmon.parser.parser:main',
+            'dmserver=darpmon.server.server:start_server'
         ]
     },    
     # dependencies (project's PyPI name)

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# (c) 2015, 2016 David A. Thompson <thompdump@gmail.com>
+# (c) 2016 David A. Thompson <thompdump@gmail.com>
 #
 # This file is part of darpmon
 #
@@ -54,6 +54,25 @@ if not util.which('arp-scan'):
     lg.error(msg)
     sys.exit(msg)
 
+# establish configuration
+config = None
+config_file_location = os.path.expanduser("~/.darpmon.json")
+if (os.path.exists(config_file_location)): 
+    f=open(config_file_location)
+    config_file_string = f.read()
+    f.close()
+    config = json.loads(config_file_string)
+else:
+    print "Config file %s not found",config_file_location
+
+# establish configuration defaults
+default_log_file_location = os.path.expanduser("~/.darpmon.log")
+if not ('log_file' in config):
+    config['log_file'] = default_log_file_location
+default_scan_delay = 60
+if not ('scan_delay' in config):
+    config['scan_delay'] = default_scan_delay
+    
 def arp_scan():
     try:
         return_string = subprocess.check_output(
@@ -96,25 +115,17 @@ def parse_raw_arp_scan_string(raw_string,logger):
 
 def main():
     """Handle command-line invocation."""
+    global config
+    global dm_lg
     parser = argparse.ArgumentParser(description="This is darpmon")
     parser.add_argument("-f", help="absolute path to log file", action="store", dest="log_file", type=str)
     parser.add_argument("-l", help="integer between 0 (verbose) and 51 (terse) defining logging", action="store", dest="log_level", type=int)
     args = parser.parse_args()
-    #
-    # define logging (level, file, message format, ...)
-    #
-    #log_level = args.log_level
-    #if isinstance(log_level, int) and log_level >= 0 and log_level <= 51:
-    #    log_level = log_level
-    #else:
-        # standard python default
-        #log_level = logging.WARN
-        # since this function doesn't necessarily exit quickly
     if args.log_file:
-        print "log file"
-        print args.log_file
+        config['log_file'] = args.log_file
+    if ('log_file' in config) and config['log_file']:
         dm_lg_handler = logging.handlers.RotatingFileHandler(
-            filename=args.log_file,
+            filename=config['log_file'],
             maxBytes=400000,
             mode='a',
             backupCount=3)
@@ -122,15 +133,10 @@ def main():
         dm_lg.addHandler(dm_lg_handler)
         dm_lg.setLevel(log_level)
         dm_lg_handler.setFormatter(logging.Formatter(log_format))
-    print "dm_lg"
-    print dir(dm_lg)
-    print dm_lg.handlers
-    # number of seconds between ARP scans
-    period=60
     while True:
         raw_scan_string = arp_scan()
         parse_raw_arp_scan_string(raw_scan_string,dm_lg)
-        time.sleep(20)
-    
+        time.sleep(config['scan_delay'])
+
 if __name__ == "__main__":
     main()
