@@ -13,9 +13,41 @@ import sys
 import time
 
 import darpmon.darpmon
-# print "config"
-# print darpmon.darpmon.config
 
+# f_out is a function which accepts a single argument, a string
+def human_readable_macs(macs,f_out):
+    make_identifier = hrm_def_make_identifier()
+    t = string.Template('${identifier} on for ${minDelta} min (${on_at} to ${off_at}) [${IP}]\n')
+    for mac in macs:
+        record = macs[mac]
+        intervals = record['intervals']
+        while intervals:
+            last_time = intervals.pop()
+            first_time = intervals.pop()
+            sec_delta = last_time - first_time
+            min_delta = sec_delta / 60
+            # use gmtime if time_format is 'UTC'
+            # use localtime if time_format is 'localtime'
+            readable_first_time = time.asctime(time.localtime(first_time))
+            readable_last_time = time.asctime(time.localtime(last_time))
+            identifier = make_identifier(mac)
+            ipv4 = record['ipv4']
+            out_string = t.substitute(identifier=identifier,
+                                      minDelta=min_delta,
+                                      on_at=readable_first_time,
+                                      off_at=readable_last_time,
+                                      IP=ipv4)
+            f_out(out_string)
+
+def build_macs(input_file):
+    """Analyze log file input_file."""
+    macs = {}
+    f=open(input_file,'r')
+    for line in f.readlines():
+        parse_line(line,macs)
+    f.close()
+    return macs
+        
 def hrm_def_make_identifier():
     use_nicks = True
     if ('use_nicks' in darpmon.darpmon.config):
@@ -31,44 +63,28 @@ def hrm_def_make_identifier():
             return mac
     return make_identifier
 
-# f_out is a function which accepts a single argument, a string
-def human_readable_macs(macs,f_out):
-    make_identifier = hrm_def_make_identifier()
-    t = string.Template('${identifier} on for ${minDelta} min (${on_at} to ${off_at}) [${IP}]\n')
-    for mac in macs:
-        record = macs[mac]
-        first_time_raw = record['firstTime']
-        last_time_raw = record['lastTime']
-        first_time = int(float(first_time_raw))
-        last_time = int(float(last_time_raw))
-        sec_delta = last_time - first_time
-        min_delta = sec_delta / 60
-        # use gmtime if time_format is 'UTC'
-        # use localtime if time_format is 'localtime'
-        readable_first_time = time.asctime(time.localtime(first_time))
-        readable_last_time = time.asctime(time.localtime(last_time))
-        identifier = make_identifier(mac)
-        ipv4 = record['ipv4']
-        out_string = t.substitute(identifier=identifier,
-                                      minDelta=min_delta,
-                                      on_at=readable_first_time,
-                                      off_at=readable_last_time,
-                                      IP=ipv4)
-        #print "out_string"
-        #print out_string
-        f_out(out_string)
-        
 def parse_line(line,macs):
     """LINE is a string representing a single, raw line from the darpmon log."""
+    # number of seconds at which a device is considered absent (has 'left' the LAN)
+    absent_at = 240
     obj = json.loads(line)
     mac = obj['mac']
     if (mac in macs):
-        macs[mac]['lastTime']=obj['d']
+        # 'intervals' slot holds a list of the form
+        # [ onTime0, offTime0, ... onTimeN, offTimeN ]
+        # where times are UNIX times (epoch/POSIX) and where
+        # the values are ascending (most recent are last in the list)
+        lastTime = int(float(macs[mac]['intervals'][-1]))
+        thisTime = int(float(obj['d']))
+        if ( thisTime - lastTime > absent_at ):
+            macs[mac]['intervals'].append(thisTime)
+            macs[mac]['intervals'].append(thisTime)
+        else:
+            macs[mac]['intervals'][-1] = thisTime
     else:
         macs[mac]={
             'ipv4': obj['ipv4'],
-            'firstTime': obj['d'],
-            'lastTime': obj['d']
+            'intervals': [ int(float(obj['d'])), int(float(obj['d'])) ]
         }             
                                     
 def main():
@@ -91,14 +107,6 @@ def main():
     #sys.stdout.write(str(macs))
     # - as human-readable summary
     human_readable_macs(macs,sys.stdout.write)
-
-def build_macs(input_file):
-    macs = {}
-    f=open(input_file,'r')
-    for line in f.readlines():
-        parse_line(line,macs)
-    f.close()
-    return macs
               
 if __name__ == "__main__":
     main()

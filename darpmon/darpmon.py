@@ -63,7 +63,7 @@ if (os.path.exists(config_file_location)):
     f.close()
     config = json.loads(config_file_string)
 else:
-    print "Config file %s not found",config_file_location
+    print "Config file " + config_file_location + " not found"
 
 # establish configuration defaults
 default_log_file_location = os.path.expanduser("~/.darpmon.log")

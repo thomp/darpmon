@@ -6,7 +6,7 @@ setup(
     # versions:
     # http://semver.org/ ?
     # comply with PEP440 ?
-    version = "0.1.4",
+    version = "0.1.5",
     entry_points={
         'console_scripts': [
             'darpmon=darpmon.darpmon:main',
@@ -17,6 +17,11 @@ setup(
     # dependencies (project's PyPI name)
     install_requires = [],
     packages = find_packages(),
+    # additional files
+    package_data = {
+        # If any package contains *.json files, include them:
+        '': ['*.json']
+    },
     # metadata for upload to PyPI
     author = "D Thompson",
     author_email = "darpmon-pypi.thomp@mailhero.io",
