@@ -39,12 +39,12 @@ def human_readable_macs(macs,f_out):
                                       IP=ipv4)
             f_out(out_string)
 
-def build_macs(input_file):
+def build_macs(input_file,filter_mac):
     """Analyze log file input_file."""
     macs = {}
     f=open(input_file,'r')
     for line in f.readlines():
-        parse_line(line,macs)
+        parse_line(line,macs,filter_mac)
     f.close()
     return macs
         
@@ -63,13 +63,16 @@ def hrm_def_make_identifier():
             return mac
     return make_identifier
 
-def parse_line(line,macs):
+# filter_mac is either None or a string specifying a mac to pay attention to (ignore all other macs)
+def parse_line(line,macs,filter_mac):
     """LINE is a string representing a single, raw line from the darpmon log."""
     # number of seconds at which a device is considered absent (has 'left' the LAN)
     absent_at = 240
     obj = json.loads(line)
     mac = obj['mac']
-    if (mac in macs):
+    if (filter_mac and (mac != filter_mac)):
+        None
+    elif (mac in macs):
         # 'intervals' slot holds a list of the form
         # [ onTime0, offTime0, ... onTimeN, offTimeN ]
         # where times are UNIX times (epoch/POSIX) and where
@@ -90,6 +93,7 @@ def parse_line(line,macs):
 def main():
     """Handle command-line invocation."""
     parser = argparse.ArgumentParser(description="This is dmparse")
+    parser.add_argument("-n", help="a nick", action="store", dest="nick", type=str)
     parser.add_argument("input_file", help="an input file", nargs="?", type=str)
     args = parser.parse_args()
     # determine location of input file
@@ -101,7 +105,13 @@ def main():
         config['log_file'] = input_file
     if not input_file:
         sys.exit("Must specify an input file")
-    macs = build_macs(input_file)
+    filter_mac = None
+    if args.nick:
+        # key = (key for key,value in dd.items() if value=='value').next() 
+        filter_mac = (key for key,value in darpmon.darpmon.config['nicks'].items() if value==args.nick).next()
+        if not filter_mac:
+            sys.exit("Didn't find that nick")
+    macs = build_macs(input_file,filter_mac)
     # output in manner user would like (overall format = JSON, human readable, ...)
     # - as JSON:
     #sys.stdout.write(str(macs))
