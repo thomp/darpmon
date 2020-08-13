@@ -15,9 +15,27 @@ To install darpmon from source, change to the directory where setup.py is locate
 
 ## Use
 
-To run darpmon, simply execute `darpmon`.
+To run darpmon, simply execute `darpmon`. For extended monitoring, consider something like `nohup darpmon > /dev/null &`.
 
-For extended monitoring, consider something like `nohup darpmon > /dev/null &`
+An example:
+
+```
+$ sudo python ./darpmon/darpmon.py -l 0
+Config file /root/.darpmon.json not found
+{"mac": "2c:7e:81:ab:60:f4", "d": "1597339285.4", "ipv4": "10.0.0.1"}
+{"mac": "00:14:22:94:ea:60", "d": "1597339285.4", "ipv4": "10.0.0.79"}
+{"mac": "2c:7e:81:ab:60:f5", "d": "1597339285.4", "ipv4": "10.0.0.254"}
+{"mac": "2c:7e:81:ab:60:f4", "d": "1597339348.0", "ipv4": "10.0.0.1"}
+{"mac": "00:14:22:94:ea:60", "d": "1597339348.0", "ipv4": "10.0.0.79"}
+{"mac": "2c:7e:81:ab:60:f5", "d": "1597339348.0", "ipv4": "10.0.0.254"}
+{"mac": "2c:7e:81:ab:60:f4", "d": "1597339410.6", "ipv4": "10.0.0.1"}
+{"mac": "00:14:22:94:ea:60", "d": "1597339410.6", "ipv4": "10.0.0.79"}
+{"mac": "2c:7e:81:ab:60:f5", "d": "1597339410.6", "ipv4": "10.0.0.254"}
+{"mac": "2c:7e:81:ab:60:f4", "d": "1597339473.19", "ipv4": "10.0.0.1"}
+{"mac": "00:14:22:94:ea:60", "d": "1597339473.19", "ipv4": "10.0.0.79"}
+{"mac": "2c:7e:81:ab:60:f5", "d": "1597339473.19", "ipv4": "10.0.0.254"}
+```
+
 
 
 ## Configuration
