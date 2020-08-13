@@ -63,6 +63,7 @@ if (os.path.exists(config_file_location)):
     f.close()
     config = json.loads(config_file_string)
 else:
+    config = json.loads("{}")
     print "Config file " + config_file_location + " not found"
 
 # establish configuration defaults
